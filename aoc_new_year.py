@@ -137,7 +137,7 @@ def main(year, path):
         os.chdir(path)
     except OSError as err:
         logger.critical(f"Error occured while attempting to change directory to {path}")
-        
+        raise err
 
 
 if __name__ == "__main__":
@@ -179,8 +179,8 @@ if __name__ == "__main__":
     # make sure that year is a 4 digit year if not will log and raise error
     if len(str(year)) < 4:
         msg = f"Year provided is not 4 digit year: '{year}'"
-        logger.critical(f'ValueError: {msg}')
-        raise ValueError(msg)
+        logger.critical(f'YearY2KError: {msg}')
+        raise YearY2KError(msg)
     # setting path to argument provided or to current directory
     path = arg_keywords.get('d', '.')
     # check if path exists, if not log and raise an OSError

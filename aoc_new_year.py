@@ -21,7 +21,9 @@
             [02]
                 [data]
             [03]
+
             ...
+            
             [25]
                 [data]
     
@@ -33,6 +35,7 @@ import os
 import sys
 import logging
 from datetime import datetime
+from glob import glob
 
 now = datetime.now()
 application_version = '2020-12-1.0'
@@ -51,9 +54,9 @@ logger.info(f'\n\n\n\t\t******{name}.{ext}: {now} ******\n')
 
 class ArgumentError(Exception):
     """
-    ArgumentError is raised when aoc_new_year.py is given an unexpected argument.Expected arguments
+    ArgumentError is raised when aoc_new_year.py is given an unexpected argument. Expected arguments
     include '-h', '--help', '-v', '--version', 'y:1234',and/or 'd:filepath/'. Any other arguments
-    provided will reesult in an ArgumentError
+    provided will result in an ArgumentError
     """
     def __init__(self, message):
         self.message = message
@@ -133,15 +136,19 @@ def main(year, path):
     """
     Main logic of the program
     """
+    directories_made = ['\n']
     # change directory to path
     try:
         os.chdir(path)
+        logger.debug(f'stepped into {os.getcwd()} directory')
     except OSError as err:
         logger.critical(f"Error occured while attempting to change directory to {path}")
         raise err
     # make directory with year
     try:
         os.mkdir(str(year))
+        directories_made.append(f'{str(year)}/')
+        logger.debug(f'mkdir {year} directory in {os.getcwd()} directory')
     except OSError as err:
         msg = f'An unexpected error occured while making {year} directory'
         logger.critical(f"{msg}: {err}")
@@ -149,6 +156,7 @@ def main(year, path):
     # change directory to year directory
     try:
         os.chdir(str(year))
+        logger.debug(f'stepped into {year} directory')
     except OSError as err:
         msg = f'An unexpected error occured while entering {year} directory'
         logger.critical(f"{msg}: {err}")
@@ -158,14 +166,25 @@ def main(year, path):
         num_str = '0' + str(x)
         # make directory with number  string
         os.mkdir(num_str)
+        directories_made.append(f'  {year}/{num_str}/')
+        logger.debug(f'made {num_str} directory')
         # make data directory in 0x directory
         os.mkdir(num_str + '/data')
+        directories_made.append(f'    {year}/{num_str}/data/')
+        logger.debug(f'made {num_str}/data directory')
     # loop through numbers 10 - 25
     for x in range(10,26):
         # make directory with number string
         os.mkdir(str(x))
+        directories_made.append(f'  {year}/{x}/')
+        logger.debug(f'made {x} directory')
         # make data directory in x directory
         os.mkdir(str(x) + '/data')
+        directories_made.append(f'    {year}/{x}/data')
+        logger.debug('made {x} directory')
+    print(f'\nDirectory structure in {os.getcwd()}:')
+    for directory in directories_made:
+        print(directory)
 
 
 if __name__ == "__main__":
@@ -217,4 +236,4 @@ if __name__ == "__main__":
         logger.critical(f'OSError: {message}')
         raise OSError(message)
     main(year, path)
-    my_exit(msg='\n\nGoodbye!')
+    my_exit(msg='\n\nProgram complete with no errors, Goodbye!')

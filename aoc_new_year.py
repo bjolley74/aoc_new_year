@@ -133,11 +133,39 @@ def main(year, path):
     """
     Main logic of the program
     """
+    # change directory to path
     try:
         os.chdir(path)
     except OSError as err:
         logger.critical(f"Error occured while attempting to change directory to {path}")
         raise err
+    # make directory with year
+    try:
+        os.mkdir(str(year))
+    except OSError as err:
+        msg = f'An unexpected error occured while making {year} directory'
+        logger.critical(f"{msg}: {err}")
+        raise OSError(msg)
+    # change directory to year directory
+    try:
+        os.chdir(str(year))
+    except OSError as err:
+        msg = f'An unexpected error occured while entering {year} directory'
+        logger.critical(f"{msg}: {err}")
+        raise OSError(msg)
+    # loop through numbers 0-9
+    for x in range(10):
+        num_str = '0' + str(x)
+        # make directory with number  string
+        os.mkdir(num_str)
+        # make data directory in 0x directory
+        os.mkdir(num_str + '/data')
+    # loop through numbers 10 - 25
+    for x in range(10,26):
+        # make directory with number string
+        os.mkdir(str(x))
+        # make data directory in x directory
+        os.mkdir(str(x) + '/data')
 
 
 if __name__ == "__main__":

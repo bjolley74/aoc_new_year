@@ -29,57 +29,37 @@
     
 """
 
-
-# import libraires
 import os
 import sys
 import logging
 from datetime import datetime
 from glob import glob
+import argparse
+from myerrors import ArgumentError, YearY2KError
 
 now = datetime.now()
-application_version = '2020-12-1.0'
-
-#get system arguments
-args = sys.argv
+prog_name = 'aoc_new_year'
 
 #    logger set up
-name, ext = args.pop(0).split('.')
-log_file = f'{name}.log' 
+log_file = f'{prog_name}.log' 
 log_level = logging.DEBUG
 f = '%(asctime)-15s: %(levelname)-8s: %(message)s'
 logging.basicConfig(level=log_level, filename=log_file, filemode='a+', format=f)
 logger = logging.getLogger(__name__)
-logger.info(f'\n\n\n\t\t******{name}.{ext}: {now} ******\n')
 
-class ArgumentError(Exception):
-    """
-    ArgumentError is raised when aoc_new_year.py is given an unexpected argument. Expected arguments
-    include '-h', '--help', '-v', '--version', 'y:1234',and/or 'd:filepath/'. Any other arguments
-    provided will result in an ArgumentError
-    """
-    def __init__(self, message):
-        self.message = message
-    
-    def __str__(self):
-        return f'"{self.message}"'
-    
-    def __repr__(self):
-        return "<class 'ArgumentError'>"
 
-class YearY2KError(Exception):
-    """
-    What? You Want Y2K all over again? A YearY2KError is raised if aoc_new_year.py is given a 
-    year via the command line that is less than a 4 digit year.
-    
-    """
-    def __init__(self, message):
-        self.message = message
-    
-    def __str__(self):
-        return f'"{self.message}"'
-    def __repr__(self):
-        return "<class 'YearY2Error'>"
+#get system arguments
+text = f"""{prog_name} will rename and move files into folder based 
+on the year, month and date that the photo was taken"""
+parser = argparse.ArgumentParser(prog=prog_name, description=text)
+year = now.year
+parser.add_argument('year', metavar='Y', default=year, type=str,
+                   help='Year of AOC that you wish to create directoy')
+parser.add_argument('-v, --version', action='version', version='%(prog)s 2021.01.1')
+
+args = parser.parse_args()
+
+logger.debug(f'arguments received: {args}')
 
 def log_wrap(pre, post):
     """Wrapper"""
@@ -189,36 +169,8 @@ def main(year, path):
 
 if __name__ == "__main__":
     # process arguments
-    arg_keywords = {}
-    if len(args) >= 1:
-        if '-h' in args or '--help' in args:
-            print_help()
-        elif '-v' in args or '--version' in args:
-            print(f"\tAdventOfCode New Year\n\taoc_new_year.py\n\tVersion {application_version}")
-            my_exit()
-        else:
-            args = [x.split(' ') for x in args]
-            for arg in args:
-                if str(type(arg)) == "<class 'list'>":
-                    for a in arg:
-                        if 'y:' in a or 'd:' in a:
-                            key, value = a.split(':')
-                            arg_keywords[key.lower()] = value
-                        else:
-                            message = f'Invalid argument received: {args}'
-                            logger.critical(message)
-                            raise ArgumentError(message)
-                else:
-                    if 'y:' in arg or 'd:' in arg:
-                        key, value = arg.split(':')
-                        arg_keywords[key.lower()] = value
-                    else:
-                        message = f'Invalid argument received: {args}'
-                        logger.critical(message)
-                        raise ArgumentError(message)
     try:
-        # setting year to argument received or to current year
-        year = int(arg_keywords.get('y', now.year))
+        year = args
     except ValueError as err:
         # if year provided is not a number log and raise error
         logger.critical(f'ValueError \'{err}\' occured while setting up year: value entered is not a number - {arg_keywords.get("y")}')

@@ -46,7 +46,8 @@ log_level = logging.DEBUG
 f = '%(asctime)-15s: %(levelname)-8s: %(message)s'
 logging.basicConfig(level=log_level, filename=log_file, filemode='a+', format=f)
 logger = logging.getLogger(__name__)
-
+with open(log_file, 'a+') as log:
+    log.write(f'************** {now} ********************')
 
 #get system arguments
 text = f"""{prog_name} will rename and move files into folder based 
@@ -54,7 +55,9 @@ on the year, month and date that the photo was taken"""
 parser = argparse.ArgumentParser(prog=prog_name, description=text)
 year = now.year
 parser.add_argument('year', metavar='Y', default=year, type=str,
-                   help='Year of AOC that you wish to create directoy')
+                   help='set 4 digit year that application will use to create directories')
+parser.add_argument('path', metavar='D', default='./', type=str, 
+                   help='set file path in which the application will place project')
 parser.add_argument('-v, --version', action='version', version='%(prog)s 2021.01.1')
 
 args = parser.parse_args()
@@ -84,30 +87,11 @@ def exiting(func):
     """Post function logging"""
     logger.debug(f"exiting {func.__name__}")
 
-@log_wrap(entering, exiting)
-def print_help():
-    """Prints out the help menu"""
-    help_menu = """
-    AdventOfCode HELP MENU
-    ----------------------
-    
-    python aoc_new_year.py <-v or --version -h or --help y:year d:file_path>
-    
-    options:
-    -------
-    -v or --version             display application version
-    -h or --help                display help menu
-    y:<year>                   set 4 digit year that application will use
-    d:<file path>              set file path that application will place project in
-
-    """
-    print(help_menu)
-    my_exit()
-
 
 def my_exit(msg=''):
     """Prints out any msg provided and performs sys.exit()"""
     print(msg)
+    print('Goodbye!')
     sys.exit()
 
 
@@ -165,15 +149,17 @@ def main(year, path):
     print(f'\nDirectory structure in {os.getcwd()}:')
     for directory in directories_made:
         print(directory)
+    created_dir = path + '\\' + str(year)
+    return os.path.exists(created_dir)
 
 
 if __name__ == "__main__":
     # process arguments
     try:
-        year = args
+        year = int(args.year)
     except ValueError as err:
         # if year provided is not a number log and raise error
-        logger.critical(f'ValueError \'{err}\' occured while setting up year: value entered is not a number - {arg_keywords.get("y")}')
+        logger.critical(f'ValueError \'{err}\' occured while setting up year: value entered is not a number - {args.year}')
         raise err
     # make sure that year is a 4 digit year if not will log and raise error
     if len(str(year)) < 4:
@@ -181,11 +167,16 @@ if __name__ == "__main__":
         logger.critical(f'YearY2KError: {msg}')
         raise YearY2KError(msg)
     # setting path to argument provided or to current directory
-    path = arg_keywords.get('d', '.')
+    path = args.path
     # check if path exists, if not log and raise an OSError
     if not os.path.exists(path):
         message = f"Path '{path}' does not exist"
         logger.critical(f'OSError: {message}')
         raise OSError(message)
-    main(year, path)
-    my_exit(msg='\n\nProgram complete with no errors, Goodbye!')
+    main_return = main(year, path)
+    if main_return:
+        logger.info('main returned True, directory successfully created')
+        my_exit(msg='\n\nProgram complete...')
+    else:
+        logger.warning('main returned False, directory not created')
+        my_exit(msg='\n\nProgram complete with errors. Please check log...')
